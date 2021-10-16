@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button, RadioButtons, CheckButtons
+from matplotlib.widgets import Button, RadioButtons, Slider
+from typing import List
+from knn_container import NeighborContainer
 
 classes = ['Class 1', 'Class 2']
 
 
 x = []
 y = []
+k = 3
 point_classes = []
 area = 500  # 0 to 15 point radii
 
@@ -26,6 +29,11 @@ def reset_plot():
 
 mode = 'Train'
 
+
+
+#######
+# GUI #
+#######
 
 def set_mode(new_mode):
     global mode
@@ -65,11 +73,23 @@ def remove_last(val):
     point_classes.pop(i)
     reset_plot()
 
-
 ax_button2 = plt.axes([0.45, 0.1, 0.18,0.05])
 rm_button = Button(ax_button2, 'Remove last', color = 'white', hovercolor = 'grey')
 rm_button.on_clicked(remove_last)
 
+
+def set_k(val):
+    global k
+    k = int(val)
+
+
+k_space = plt.axes([0.25, 0.05, 0.38, 0.05])
+k_slider = Slider(k_space, "Neighbors", 1, 5, 1, valstep=[i for i in range(1, 6)])
+k_slider.on_changed(set_k)
+
+#########
+# CLICK #
+#########
 
 def onclick(event):
     if not event.inaxes == ax:
@@ -88,27 +108,29 @@ def new_point(event, cls):
     reset_plot()
 
 def eval_point(event):
-    shortest_distance = 0
-    shortest_index = None
+    nc = NeighborContainer(k, x, y, point_classes)
+    nc.test_point((event.xdata, event.ydata))
 
-    for i in range(len(x)):
-        x_dist = x[i] - event.xdata
-        y_dist = y[i] - event.ydata
-        dist = (x_dist**2 + y_dist**2) ** (1/2)
-        if (dist < shortest_distance) or (shortest_distance == 0):
-            shortest_distance = dist
-            shortest_index = i
-
-    new_point(event, point_classes[shortest_index])
-    circle_point(shortest_index)
+    new_point(event, nc.vote())
+    circle_points(nc.get_neighbor_indexes())
 
 
-def circle_point(index):
-    x_coor, y_coor = x[index], y[index]
+def circle_points(indexes : List[int]):
+    temp_x = x.copy()
+    temp_y = y.copy()
+    temp_areas = [area for _ in range(len(x))]
+    temp_classes = [classes.index(c) for c in point_classes]
+
+    for index in indexes:
+        x_coor, y_coor = x[index], y[index]
+        temp_x.append(x_coor)
+        temp_y.append(y_coor)
+        temp_areas.append(80)
+        temp_classes.append(0.5)
+
     global p
-    areas = [area for _ in range(len(x))] + [80]
     p.remove()
-    p = ax.scatter(x + [x_coor], y + [y_coor], s= areas, c=[classes.index(c) for c in point_classes] + [0.5], alpha=0.5)
+    p = ax.scatter(temp_x, temp_y, s= temp_areas, c= temp_classes, alpha=0.5)
     fig.canvas.draw()
 
 
