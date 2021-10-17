@@ -24,8 +24,6 @@ class BasePlot:
 
         cid = self.fig.canvas.mpl_connect('button_press_event', self.onclick)
 
-        plt.show()
-
     def reset_plot(self):
         pass
 
@@ -38,13 +36,12 @@ class BasePlot:
     def onclick(self, event):
         pass
 
-    def new_point(self, event, cls):
+    def new_point(self, event):
         pass
 
 
 if __name__ == "__main__":
     bp = BasePlot()
-
 
 
 
